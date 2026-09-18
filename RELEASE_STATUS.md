@@ -4,7 +4,7 @@ Updated 18 September 2026.
 
 | Available now | Next release | Later |
 | --- | --- | --- |
-| Task and development rules | A reviewed sample video package | Full competitive submission rules |
+| Task, development rules and MIT-licensed starter code | A reviewed sample video package | Full competitive submission rules |
 | DPVO inference wrapper and pinned setup guide | Video, timing, calibration and reference downloads | Online submission service |
 | CPU evaluator and prediction format | Real RGB/thermal reproduction and public validation result | Leaderboard |
 | Synthetic evaluator example | Final data coverage and release terms | Competition dates |

@@ -65,6 +65,6 @@ here. See [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Terms
 
-The code license is being finalized for this preview. No dataset license or rights
-to recordings are granted by publication of this source. Dataset terms will accompany
-the download. Upstream dependency and checkpoint terms apply separately.
+The starter code is licensed under the [MIT License](LICENSE). Dataset terms will
+accompany the video download and are separate from the code license. Upstream DPVO,
+dependency and checkpoint terms apply separately; see [THIRD_PARTY.md](THIRD_PARTY.md).

@@ -37,7 +37,7 @@ cannot be used for inference, model training or a real-world performance claim.
 
 ## Prepare for the dataset
 
-The planned development selection has 75 training and 20 validation clips, split
+The planned development selection has 68 training and 24 validation clips, split
 by recording boat, with RGB and thermal imagery. The released manifest will define
 the final selection and camera coverage. Each sequence will have anonymous IDs,
 video, decoded frame timestamps, nominal calibration and separate local-position

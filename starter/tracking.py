@@ -7,7 +7,14 @@ from queue import Empty
 import numpy as np
 from preprocessing import ClipPreprocessor
 
-DPVO_DIR = os.environ.get('DPVO_DIR', os.path.join(os.environ.get('MACVI_ROOT', os.path.expanduser('~/Documents/macvi')), 'DPVO'))
+def _resolve_dpvo_dir():
+    if os.environ.get('DPVO_DIR'):
+        return os.environ['DPVO_DIR']
+    if os.environ.get('MACVI_ROOT'):
+        return os.path.join(os.environ['MACVI_ROOT'], 'DPVO')
+    return None
+
+DPVO_DIR = _resolve_dpvo_dir()
 
 def _stream_worker(queue, video_path: str, preset: str, target_fps: float,
                    calibration=None, frame_timestamps=None):
@@ -80,6 +87,8 @@ class ClipStream:
 def track(video_path: str, preset: str, target_fps: float, seed: int,
           calibration=None, frame_timestamps=None):
     """Run DPVO over one clip. Returns (poses, frame_indices, preprocessor)."""
+    if not DPVO_DIR:
+        raise ValueError('Set DPVO_DIR to the pinned DPVO checkout; see QUICKSTART.md')
     import torch
     sys.path.insert(0, DPVO_DIR)
     from dpvo.config import cfg

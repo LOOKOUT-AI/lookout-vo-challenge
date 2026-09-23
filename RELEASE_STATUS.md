@@ -1,32 +1,40 @@
-# Development release progress
+# Development release v0.1
 
-Updated 22 September 2026.
+Published 23 September 2026.
 
-| Available now | Next release | Later |
-| --- | --- | --- |
-| Task, development rules and MIT-licensed starter code | The complete development dataset | Full competitive submission rules |
-| DPVO inference wrapper and pinned setup guide | Video, timing, calibration and reference downloads | Online submission service |
-| CPU evaluator and prediction format | Real RGB/thermal reproduction and public validation result | Leaderboard |
-| Synthetic evaluator example | Final data coverage and release terms | Competition dates |
+The [full development dataset](https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar)
+is available without an account: **92 clips, 68 training and 24 validation**.
+It includes all development videos, anonymous sequence IDs, frame timestamps,
+nominal calibration, local reference trajectories, rules and the public starter.
+Test clips remain withheld. The dataset is CC BY-NC 4.0 and the starter is MIT.
 
-The synthetic example verifies the input/output workflow only. Real recordings are
-not available in this repository, and no score is claimed as a reproduced result on
-the forthcoming public dataset. Development rules and interfaces may evolve; changes
-will be recorded here and in releases.
+## Validation and limitations
 
-The current development selection is planned to contain 68 training and 24
-validation clips. A thermal recording boat has been moved into validation, and
-three clips with invalid frame timestamps have been removed. The published
-manifest will define the final selection and RGB/thermal coverage.
+- The source archive and every packaged file passed SHA-256 checks. All 92 clips
+  passed public manifest/timing/reference validation, image-dimension checks and
+  initial video decoding.
+- The starter handles inaccurate container frame-count metadata and checks the
+  actual decoded frame count against the released timing array. This matters for
+  `clip_042`, whose container declares two more frames than are decoded.
+- Released timing arrays include small monotonicity repairs. Nine clips contain
+  intervals of approximately one microsecond: `clip_015`, `clip_032`, `clip_042`,
+  `clip_046`, `clip_048`, `clip_049`, `clip_056`, `clip_069`, `clip_089`.
+  Use the released times for prediction/scoring consistency. Timing quality and
+  reference alignment remain development limitations; corrections will be versioned.
+- Calibration is nominal and FOV-derived. References are local positions in metres
+  with zero vertical coordinate; the evaluator scores position after global
+  similarity alignment, not absolute scale or orientation.
+- The maintainer has reported GPU baseline runs, but an independent run on the
+  exact public package has not been completed. We do not publish an official
+  baseline score or claim GPU reproduction from CPU checks. DPVO results vary
+  between runs; report seeds, temporal coverage, scored/failed counts and spread.
 
-The complete development package has been built and its maintainer reports
-successful checksum, inference and scoring checks. The package handoff and an
-independent check remain pending before public downloads are enabled. The next
-dataset release will include the full development selection. Test data remains
-withheld; online submissions and the leaderboard can follow separately.
+## What follows
 
-The DPVO baseline varies between runs. The release should report all five existing
-validation runs, their aggregate median and observed range, and scored/failed clip
-and temporal coverage. The results will be published with the validation evidence.
+Participants can download the full package, run their own methods and evaluate
+locally now. Online submissions, the leaderboard, final ranking/coverage rules and
+competition dates will be announced separately. The development interface and
+reference data may receive documented corrections.
 
-Watch releases or join the [MaCVi community](https://macvi.org/discord) for updates.
+Watch releases, report issues in this repository, or join the
+[MaCVi community](https://macvi.org/discord) for updates.

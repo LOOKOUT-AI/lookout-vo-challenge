@@ -276,8 +276,10 @@ class ClipPreprocessor:
         self.n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
         self.frame_timestamps = frame_timestamps
-        if frame_timestamps is not None and len(frame_timestamps) != self.n_frames:
-            raise ValueError('video frame count differs from the released timestamp count')
+        if frame_timestamps is not None:
+            # Container frame counts can differ from the actual decoded stream.
+            # Check the complete decoded stream in frames_with_time instead.
+            self.n_frames = len(frame_timestamps)
         if calibration is not None:
             from public_dataset import validate_calibration
             validate_calibration(calibration)
@@ -409,27 +411,34 @@ class ClipPreprocessor:
         self._pts, self._decoded_index = [], []
         intr = np.array([self.intrinsics.fx, self.intrinsics.fy,
                          self.intrinsics.cx, self.intrinsics.cy], dtype=np.float32)
-        while True:
-            for _ in range(self.stride):
-                ok, image = cap.read()
+        decoded_count = 0
+        try:
+            while True:
+                for _ in range(self.stride):
+                    ok, image = cap.read()
+                    if not ok:
+                        break
+                    decoded_count += 1
+                    if self.frame_timestamps is not None and decoded_count > self.n_frames:
+                        raise ValueError('decoded video has more frames than released timestamps')
                 if not ok:
                     break
-            if not ok:
-                break
-            pts = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0    # PTS of the frame just read
-            idx = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1  # its decoded index
-            if self.frame_timestamps is not None:
-                pts = float(self.frame_timestamps[idx])
-            elif not np.isfinite(pts) or (self._pts and pts <= self._pts[-1]):
-                cap.release()
-                raise ValueError('decoder did not provide increasing presentation timestamps')
-            self._pts.append(pts)
-            self._decoded_index.append(idx)
-            self._pts_by_index[t] = float(pts)
-            self._decoded_by_index[t] = int(idx)
-            yield t, self.transform(image), intr, float(pts), int(idx)
-            t += 1
-        cap.release()
+                pts = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+                idx = decoded_count - 1
+                if self.frame_timestamps is not None:
+                    pts = float(self.frame_timestamps[idx])
+                elif not np.isfinite(pts) or (self._pts and pts <= self._pts[-1]):
+                    raise ValueError('decoder did not provide increasing presentation timestamps')
+                self._pts.append(pts)
+                self._decoded_index.append(idx)
+                self._pts_by_index[t] = float(pts)
+                self._decoded_by_index[t] = int(idx)
+                yield t, self.transform(image), intr, float(pts), int(idx)
+                t += 1
+            if self.frame_timestamps is not None and decoded_count != self.n_frames:
+                raise ValueError('decoded video has fewer frames than released timestamps')
+        finally:
+            cap.release()
 
     def manifest(self) -> dict:
         """Everything the data contract asks us to record for this clip."""

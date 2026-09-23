@@ -1,8 +1,9 @@
 # Maritime monocular VO: development quick start
 
-**Preview status:** the real video package is forthcoming. To try the CPU evaluator
-now, use the synthetic example in [README.md](README.md). The commands below apply
-once you have the released video package; the synthetic example has no video.
+**Development release v0.1 is available.** Download and verify the full video
+package using the [README instructions](https://github.com/LOOKOUT-AI/lookout-vo-challenge#download-the-full-development-dataset).
+The commands below run from its extracted `release/` directory. Read
+[RELEASE_STATUS.md](RELEASE_STATUS.md) for current validation and timing limitations.
 
 Run these commands from the downloaded dataset directory. It contains
 `release_manifest.json`, `videos/`, `timing/`, `references/`, and `starter/`.

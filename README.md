@@ -4,9 +4,10 @@ Estimate a boat-mounted camera's trajectory from RGB or thermal video, calibrati
 and frame timestamps. Water reflections, waves, changing visibility and distant
 shorelines make this a challenging setting for visual odometry.
 
-**Public development preview — 18 September 2026.** The starter, prediction format,
-local evaluator and a synthetic example are available now. Real dataset downloads,
-a reproduced public-data baseline and participation dates are coming next.
+**Full development release — 23 September 2026.** Download all 92 development clips
+(68 training, 24 validation), including RGB and thermal video, calibration, frame
+timestamps and reference trajectories. Start developing and evaluating locally now.
+Online submissions, the leaderboard and competition dates will follow.
 
 [Challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) ·
 [Development rules](RULES.md) · [DPVO quick start](QUICKSTART.md) ·
@@ -35,22 +36,45 @@ directory when regenerating the example.
 This is an artificial trajectory for testing the interface. It has no video and
 cannot be used for inference, model training or a real-world performance claim.
 
-## Prepare for the dataset
+## Download the full development dataset
 
-The planned development selection has 68 training and 24 validation clips, split
-by recording boat, with RGB and thermal imagery. The released manifest will define
-the final selection and camera coverage. Each sequence will have anonymous IDs,
-video, decoded frame timestamps, nominal calibration and separate local-position
-references. Test data remains withheld.
+[Download the full archive (6.8 GB)](https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar) ·
+[SHA-256 checksum](https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar.sha256)
+
+No account is required. Verify the archive before extracting it, then verify its
+individual files:
+
+```bash
+curl -fLO https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar
+curl -fLO https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar.sha256
+sha256sum --check lookout-vo-dev-v0.1.tar.sha256
+tar -xf lookout-vo-dev-v0.1.tar
+(cd release && sha256sum --check CHECKSUMS.sha256)
+```
+
+The package contains the complete development selection: 68 training and 24
+validation clips, split by recording boat. The manifest lists the final selection
+and camera coverage. Each anonymous sequence includes video, decoded frame
+timestamps, nominal calibration and separate local-position references. Test data
+remains withheld.
 
 The inference wrapper uses DPVO; [QUICKSTART.md](QUICKSTART.md) records the pinned
-upstream revision, environment and checkpoint checksum. You can prepare that
-environment now. Running inference requires the forthcoming video package.
+upstream revision, environment and checkpoint checksum. After installing that CUDA
+environment, run from this repository with the extracted `release/` directory:
+
+```bash
+python starter/infer.py --dataset release/release_manifest.json --clips clip_000 --output runs/demo
+python starter/evaluate.py --dataset release/release_manifest.json --clips clip_000 --predictions runs/demo
+```
+
+Use a fresh output directory for each run. For validation, replace `--clips clip_000`
+with `--split val`. The package includes the corrected starter; prefer this
+repository for subsequent fixes and [release notes](RELEASE_STATUS.md).
 
 Allowed inference inputs are monocular video, calibration and frame timestamps.
 GPS, IMU, AIS, speed and heading are not inference inputs. Read [RULES.md](RULES.md)
 for training rules and the provisional local evaluation metric. Always report
-coverage with scores. Online submissions and a competitive leaderboard will follow.
+coverage with scores.
 
 ## Follow updates and contribute
 
@@ -65,6 +89,7 @@ here. See [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ## Terms
 
-The starter code is licensed under the [MIT License](LICENSE). Dataset terms will
-accompany the video download and are separate from the code license. Upstream DPVO,
+The starter code is licensed under the [MIT License](LICENSE). The dataset uses
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/); see `release/LICENSE.txt`.
+Dataset terms are separate from the code license. Upstream DPVO,
 dependency and checkpoint terms apply separately; see [THIRD_PARTY.md](THIRD_PARTY.md).

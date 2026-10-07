@@ -85,10 +85,12 @@ class ClipStream:
 
 
 def track(video_path: str, preset: str, target_fps: float, seed: int,
-          calibration=None, frame_timestamps=None):
+          calibration=None, frame_timestamps=None, dpvo_buffer_size=None):
     """Run DPVO over one clip. Returns (poses, frame_indices, preprocessor)."""
     if not DPVO_DIR:
         raise ValueError('Set DPVO_DIR to the pinned DPVO checkout; see QUICKSTART.md')
+    if dpvo_buffer_size is not None and dpvo_buffer_size <= 0:
+        raise ValueError('dpvo_buffer_size must be positive')
     import torch
     sys.path.insert(0, DPVO_DIR)
     from dpvo.config import cfg
@@ -96,7 +98,11 @@ def track(video_path: str, preset: str, target_fps: float, seed: int,
 
     torch.manual_seed(seed)
     np.random.seed(seed)
+    # Keep a diagnostic override local to this run instead of mutating DPVO's singleton.
+    cfg = cfg.clone()
     cfg.merge_from_file(os.path.join(DPVO_DIR, 'config', 'default.yaml'))
+    if dpvo_buffer_size is not None:
+        cfg.BUFFER_SIZE = dpvo_buffer_size
 
     pre = ClipPreprocessor(video_path, preset, target_fps=target_fps,
                            calibration=calibration, frame_timestamps=frame_timestamps)

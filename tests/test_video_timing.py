@@ -46,3 +46,12 @@ class VideoTimingTests(unittest.TestCase):
         pre = ClipPreprocessor(self.video, 'wide', frame_timestamps=np.arange(13)/30)
         with self.assertRaisesRegex(ValueError, 'more frames'):
             list(pre.frames_with_time())
+
+    def test_target_above_native_fps_keeps_every_frame_without_upsampling(self):
+        times = np.arange(14)/30
+        pre = ClipPreprocessor(self.video, 'wide', target_fps=80,
+                               frame_timestamps=times)
+        frames = list(pre.frames_with_time())
+        self.assertEqual(pre.stride, 1)
+        self.assertAlmostEqual(pre.effective_fps, 30)
+        self.assertEqual([frame[4] for frame in frames], list(range(14)))

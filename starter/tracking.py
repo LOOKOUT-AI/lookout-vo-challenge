@@ -1,11 +1,14 @@
 """DPVO tracking core shared by private experiments and the public starter."""
 from __future__ import annotations
 import os
+import platform
+import subprocess
 import sys
 import multiprocessing as mp
 from queue import Empty
 import numpy as np
 from preprocessing import ClipPreprocessor
+from public_dataset import sha256
 
 def _resolve_dpvo_dir():
     if os.environ.get('DPVO_DIR'):
@@ -84,19 +87,81 @@ class ClipStream:
         self._queue.close()
 
 
-def track(video_path: str, preset: str, target_fps: float, seed: int,
-          calibration=None, frame_timestamps=None):
-    """Run DPVO over one clip. Returns (poses, frame_indices, preprocessor)."""
+def _dpvo_config(dpvo_buffer_size=None):
+    """DPVO configuration exactly as track() runs it: upstream defaults, default.yaml, override."""
     if not DPVO_DIR:
         raise ValueError('Set DPVO_DIR to the pinned DPVO checkout; see QUICKSTART.md')
-    import torch
+    if dpvo_buffer_size is not None and dpvo_buffer_size <= 0:
+        raise ValueError('dpvo_buffer_size must be positive')
     sys.path.insert(0, DPVO_DIR)
     from dpvo.config import cfg
+    # Keep a diagnostic override local to this run instead of mutating DPVO's singleton.
+    cfg = cfg.clone()
+    cfg.merge_from_file(os.path.join(DPVO_DIR, 'config', 'default.yaml'))
+    if dpvo_buffer_size is not None:
+        cfg.BUFFER_SIZE = dpvo_buffer_size
+    return cfg
+
+
+def _git_revision(path):
+    """Commit of the checkout rooted at path; 'unknown' otherwise (not a parent repo's HEAD)."""
+    try:
+        top, revision = subprocess.run(
+            ['git', '-C', path, 'rev-parse', '--show-toplevel', 'HEAD'], capture_output=True,
+            text=True, timeout=10, check=True).stdout.split()
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return 'unknown'
+    return revision if os.path.realpath(top) == os.path.realpath(path) else 'unknown'
+
+
+def _module_version(name):
+    try:
+        return str(__import__(name).__version__)
+    except Exception:
+        return None
+
+
+def describe_environment(dpvo_buffer_size=None):
+    """Record the DPVO revision, checkpoint, resolved settings and library versions of a run.
+
+    Every probe is best effort: a missing DPVO checkout or library is recorded as unknown/null
+    instead of stopping the run, because the per-clip records already capture that failure.
+    """
+    dpvo = dict(dir=DPVO_DIR, revision='unknown', checkpoint_sha256=None,
+                buffer_size=dpvo_buffer_size, config=None)
+    if DPVO_DIR:
+        dpvo['revision'] = _git_revision(DPVO_DIR)
+        try:
+            dpvo['checkpoint_sha256'] = sha256(os.path.join(DPVO_DIR, 'dpvo.pth'))
+        except OSError:
+            pass
+        try:
+            cfg = _dpvo_config(dpvo_buffer_size)
+            dpvo['buffer_size'] = int(cfg.BUFFER_SIZE)
+            dpvo['config'] = {key: cfg[key] for key in sorted(cfg)}
+        except Exception:
+            pass
+    env = dict(python=platform.python_version(), numpy=np.__version__,
+               opencv=_module_version('cv2'), torch=None, torch_cuda=None, gpu=None)
+    try:
+        import torch
+        env.update(torch=str(torch.__version__), torch_cuda=torch.version.cuda)
+        if torch.cuda.is_available():
+            env['gpu'] = torch.cuda.get_device_name(0)
+    except Exception:
+        pass
+    return dpvo, env
+
+
+def track(video_path: str, preset: str, target_fps: float, seed: int,
+          calibration=None, frame_timestamps=None, dpvo_buffer_size=None):
+    """Run DPVO over one clip. Returns (poses, frame_indices, preprocessor)."""
+    cfg = _dpvo_config(dpvo_buffer_size)
+    import torch
     from dpvo.dpvo import DPVO
 
     torch.manual_seed(seed)
     np.random.seed(seed)
-    cfg.merge_from_file(os.path.join(DPVO_DIR, 'config', 'default.yaml'))
 
     pre = ClipPreprocessor(video_path, preset, target_fps=target_fps,
                            calibration=calibration, frame_timestamps=frame_timestamps)

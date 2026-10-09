@@ -37,8 +37,17 @@ python -m pip install numpy==1.26.4
 
 ## DPVO inference setup
 
-The recorded baseline used DPVO commit `859bbbfdac6c6185f345003b3c473901fcd13ace`,
-PyTorch `2.5.1+cu121`, CUDA toolkit 12.1, and OpenCV `4.10.0.84`.
+Tested setup (24-clip validation run at `--target-fps 8`: about 47 minutes on one GPU):
+
+| Component | Version |
+|---|---|
+| DPVO | commit `859bbbfdac6c6185f345003b3c473901fcd13ace` |
+| Python | 3.10.12 |
+| PyTorch | `2.5.1+cu121` (CUDA 12.1) |
+| OpenCV | `opencv-python==4.10.0.84` |
+| NumPy | 1.26.4 |
+| GPU | NVIDIA RTX A5000 (24 GB) |
+
 The CUDA extension must be built against the installed PyTorch/CUDA combination.
 Follow the [installation instructions at the pinned upstream commit](https://github.com/princeton-vl/DPVO/tree/859bbbfdac6c6185f345003b3c473901fcd13ace#setup-and-installation)
 for Eigen 3.4.0 and the upstream dependencies. The viewer is optional; this starter
@@ -54,11 +63,26 @@ python -m pip install numpy==1.26.4 opencv-python==4.10.0.84
 export DPVO_DIR="$PWD/DPVO"
 ```
 
-Obtain `dpvo.pth` from the models link in the pinned upstream README, put it inside
-`DPVO_DIR`, and verify its SHA-256 is
-`30d02dc2b88a321cf99aad8e4ea1152a44d791b5b65bf95ad036922819c0ff12`.
-The checkpoint is not included in the dataset. The CPU package tests do not establish
-that a new GPU/CUDA installation reproduces the recorded baseline.
+The checkpoint is not included in the dataset. Upstream's Dropbox link in
+`download_models_and_data.sh` no longer serves the file; download `models.zip` from the
+[Google Drive mirror](https://drive.google.com/file/d/1dRqftpImtHbbIPNBIseCv9EvrlHEnjhX/view)
+linked in the upstream README and unpack `dpvo.pth` into `DPVO_DIR`:
+
+```bash
+python -m pip install gdown
+gdown 1dRqftpImtHbbIPNBIseCv9EvrlHEnjhX -O DPVO/models.zip
+(cd DPVO && unzip -o models.zip dpvo.pth && sha256sum models.zip dpvo.pth)
+```
+
+Both checksums must match:
+
+| File | Bytes | SHA-256 |
+|---|---|---|
+| `models.zip` | 13,100,005 | `89f43de2c92676ddcf7f49e8ae3f8940b7af73f549a7a5b8308850b67de78479` |
+| `dpvo.pth` | 14,167,743 | `30d02dc2b88a321cf99aad8e4ea1152a44d791b5b65bf95ad036922819c0ff12` |
+
+The CPU package tests do not establish that a new GPU/CUDA installation reproduces the
+recorded baseline.
 
 ## One clip
 
@@ -94,12 +118,21 @@ record native/effective frame rates and stride. The default target is **8**, not
 without creating new frames, and can substantially increase runtime and tracker
 memory use. Inference time is separate from the CPU evaluator's runtime.
 
+The manifest's `dpvo` entry records the DPVO git revision (`unknown` if `DPVO_DIR`
+is not a git checkout), the checkpoint SHA-256, the buffer size DPVO actually ran
+with and its resolved configuration. `environment` records the Python, NumPy,
+OpenCV, PyTorch and CUDA versions and the GPU.
+
 Clip start/completion messages show progress. Failed clips write their full Python
 traceback to `logs/<clip-id>.log`; the manifest retains a short reason and log path.
 Keep this directory with the predictions when reporting an issue. A run can finish
 with failures, so check the predicted/scored counts rather than only the exit code.
 Non-finite predictions remain failures; do not replace them with fabricated poses
 or remove the affected clips from evaluation.
+
+DPVO is nondeterministic on GPU even with a fixed `--seed`: identical reruns can
+fail on different clips and score differently. Local reruns of failed clips are fine;
+keep the original run, its settings and its failure logs, and report them with the retry.
 
 For a focused retry, preserve the original run and select only the failed clips:
 
@@ -109,7 +142,9 @@ python starter/evaluate.py --dataset release/release_manifest.json --clips clip_
 ```
 
 If a clip still fails specifically because DPVO's keyframe buffer is too small,
-retry it in another new directory with `--dpvo-buffer-size 8192`. This overrides
+retry it in another new directory with `--dpvo-buffer-size 8192`. At 8 fps the default
+of 4096 holds every frame of an eight-minute clip, so this mainly matters for targets
+near the native frame rate. This overrides
 `BUFFER_SIZE` after loading DPVO's configuration; upstream's `--opts` flag is not
 accepted by this wrapper. A larger buffer consumes more GPU memory and is a
 diagnostic option, not a guaranteed fix or a change to the baseline default.

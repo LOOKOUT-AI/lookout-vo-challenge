@@ -1,7 +1,10 @@
 import contextlib
+import hashlib
 import io
 import json
 from pathlib import Path
+import platform
+import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -30,13 +33,17 @@ class InferenceDiagnosticsTests(unittest.TestCase):
         self.pre = SimpleNamespace(decoded_index=int, frame_time=float,
                                    native_fps=30.0, stride=4, effective_fps=7.5)
         self.success = (np.zeros((2, 7)), np.arange(2), self.pre)
+        self.environment = ({'revision': 'abc123', 'buffer_size': 4096,
+                             'checkpoint_sha256': 'f' * 64}, {'python': '3.10.12'})
 
-    def run_inference(self, outcomes, extra=()):
+    def run_inference(self, outcomes, extra=(), environment=None):
         stdout = io.StringIO()
+        probe = (patch.object(infer, 'describe_environment', return_value=self.environment)
+                 if environment is None else contextlib.nullcontext())
         with patch.object(infer, 'load_manifest', return_value={'clips': self.clips}), \
              patch.object(infer, 'load_timestamps', return_value=np.array([0., 1.])), \
              patch.object(infer, 'track', side_effect=outcomes) as tracker, \
-             contextlib.redirect_stdout(stdout):
+             probe, contextlib.redirect_stdout(stdout):
             result = infer.main(['--dataset', str(self.dataset), '--output',
                                  str(self.output), *extra])
         self.assertEqual(result, 0)
@@ -89,6 +96,88 @@ class InferenceDiagnosticsTests(unittest.TestCase):
         self.assertIn('elapsed_seconds', run['clips'][0])
         self.assertIn('clip_000: missing_video', stdout)
         self.assertEqual(tracker.call_count, 1)
+
+    def test_unwritable_error_log_does_not_abort_the_run(self):
+        original = Path.write_text
+
+        def write_text(path, *args, **kwargs):
+            if path.suffix == '.log':
+                raise OSError('disk full')
+            return original(path, *args, **kwargs)
+
+        with patch.object(Path, 'write_text', autospec=True, side_effect=write_text):
+            run, stdout, tracker = self.run_inference([RuntimeError('boom'), self.success])
+        first, second = run['clips']
+        self.assertEqual((first['status'], first['reason'], first['error_log']),
+                         ('tracking_failed', 'boom', None))
+        self.assertEqual(second['status'], 'predicted')
+        self.assertEqual(tracker.call_count, 2)
+        self.assertIn('Could not write traceback', stdout)
+
+    def test_manifest_records_dpvo_revision_checkpoint_settings_and_versions(self):
+        dpvo_dir = self.root / 'DPVO'
+        (dpvo_dir / 'config').mkdir(parents=True)
+        (dpvo_dir / 'config/default.yaml').write_text('PATCHES_PER_FRAME: 96\n')
+        (dpvo_dir / 'dpvo.pth').write_bytes(b'checkpoint')
+        git = ['git', '-C', str(dpvo_dir), '-c', 'user.name=t', '-c', 'user.email=t@t',
+               '-c', 'commit.gpgsign=false']
+        subprocess.run(['git', 'init', '-q', str(dpvo_dir)], check=True)
+        subprocess.run(git + ['add', '.'], check=True)
+        subprocess.run(git + ['commit', '-q', '-m', 'pin'], check=True)
+        revision = subprocess.run(git + ['rev-parse', 'HEAD'], check=True,
+                                  capture_output=True, text=True).stdout.strip()
+
+        class Config(dict):
+            __getattr__ = dict.__getitem__
+            __setattr__ = dict.__setitem__
+
+            def clone(self):
+                return Config(self)
+
+            def merge_from_file(self, path):
+                self['PATCHES_PER_FRAME'] = 96 if Path(path).is_file() else None
+
+        shared = Config(BUFFER_SIZE=4096, PATCHES_PER_FRAME=80)
+        torch = SimpleNamespace(__version__='2.5.1+cu121', version=SimpleNamespace(cuda='12.1'),
+                                cuda=SimpleNamespace(is_available=lambda: True,
+                                                     get_device_name=lambda _: 'Test GPU'))
+        modules = {'torch': torch, 'cv2': SimpleNamespace(__version__='4.10.0'),
+                   'dpvo.config': SimpleNamespace(cfg=shared)}
+        for override, expected in ((None, 4096), (8192, 8192)):
+            with self.subTest(override=override), patch.dict(sys.modules, modules), \
+                 patch.object(sys, 'path', list(sys.path)), \
+                 patch.object(tracking, 'DPVO_DIR', str(dpvo_dir)):
+                output = self.root / f'run-{override}'
+                self.output = output
+                extra = () if override is None else ('--dpvo-buffer-size', str(override))
+                run, stdout, _ = self.run_inference([self.success] * 2, extra, environment=True)
+                self.assertEqual(run['dpvo_buffer_size'], override)
+                self.assertEqual(run['dpvo']['buffer_size'], expected)
+                self.assertEqual(run['dpvo']['config']['BUFFER_SIZE'], expected)
+                self.assertEqual(run['dpvo']['config']['PATCHES_PER_FRAME'], 96)
+                self.assertEqual(run['dpvo']['revision'], revision)
+                self.assertEqual(run['dpvo']['checkpoint_sha256'],
+                                 hashlib.sha256(b'checkpoint').hexdigest())
+                self.assertEqual(run['environment'], dict(
+                    python=platform.python_version(), numpy=np.__version__, opencv='4.10.0',
+                    torch='2.5.1+cu121', torch_cuda='12.1', gpu='Test GPU'))
+                self.assertIn(f'buffer_size={expected}', stdout)
+                self.assertIn(f'revision={revision}', stdout)
+        self.assertEqual(shared['BUFFER_SIZE'], 4096)
+
+    def test_environment_without_dpvo_checkout_is_recorded_as_unknown(self):
+        # A copied DPVO directory inside another repository must not report that repo's HEAD.
+        subprocess.run(['git', 'init', '-q', str(self.root / 'outer')], check=True)
+        plain = self.root / 'outer/DPVO'
+        plain.mkdir()
+        for dpvo_dir, override in ((None, None), (str(plain), 8192)):
+            with self.subTest(dpvo_dir=dpvo_dir), \
+                 patch.object(tracking, 'DPVO_DIR', dpvo_dir), \
+                 patch.object(tracking, '_dpvo_config', side_effect=ImportError('no dpvo')):
+                dpvo, env = tracking.describe_environment(override)
+            self.assertEqual((dpvo['revision'], dpvo['checkpoint_sha256'], dpvo['buffer_size']),
+                             ('unknown', None, override))
+            self.assertEqual(env['python'], platform.python_version())
 
     def test_invalid_buffer_rejected_before_creating_output(self):
         for value in ('0', '-1', '1.5'):

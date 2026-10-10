@@ -173,13 +173,14 @@ same length, with increasing indices/times and finite Nx3 positions.
 ## Pack a test submission
 
 When the [challenge page](https://macvi.org/workshop/macvi27/challenges/lookout)
-provides the held-out participant archive, extract it separately from development
-data. In this example its manifest is at `test_release/release_manifest.json`;
-replace that path with your actual extraction directory.
+provides the held-out participant archive, verify its checksum and extract it
+separately from development data, under this repository. Its manifest is at
+`lookout-vo-test-v0.1/release_manifest.json`. Use this repository's latest packer,
+not the older snapshot inside the archive.
 
 ```bash
-python starter/infer.py --dataset test_release/release_manifest.json --split test --target-fps 8 --seed 0 --output runs/test
-python starter/pack_submission.py --dataset test_release/release_manifest.json --split test --predictions runs/test --output submission.json
+python starter/infer.py --dataset lookout-vo-test-v0.1/release_manifest.json --split test --target-fps 8 --seed 0 --output runs/test
+python starter/pack_submission.py --dataset lookout-vo-test-v0.1/release_manifest.json --split test --predictions runs/test --output submission.json
 ```
 
 The packer requires a prediction file for every test clip, validates its format

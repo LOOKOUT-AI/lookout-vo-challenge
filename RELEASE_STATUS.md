@@ -6,7 +6,8 @@ The [full development dataset](https://macvi.org/downloads/lookout/v0.1/lookout-
 is available without an account: **92 clips, 68 training and 24 validation**.
 It includes all development videos, anonymous sequence IDs, frame timestamps,
 nominal calibration, local reference trajectories, rules and the public starter.
-Test clips remain withheld. The dataset is CC BY-NC 4.0 and the starter is MIT.
+The separate held-out release is described below. The dataset is CC BY-NC 4.0
+and the starter is MIT.
 
 ## Validation and limitations
 
@@ -29,12 +30,26 @@ Test clips remain withheld. The dataset is CC BY-NC 4.0 and the starter is MIT.
   baseline score or claim GPU reproduction from CPU checks. DPVO results vary
   between runs; report seeds, temporal coverage, scored/failed counts and spread.
 
-## What follows
+## Held-out test release
+
+The 20-clip test participant package contains videos, frame timestamps and nominal
+camera calibration, but **no reference trajectories**. See the
+[challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) for the
+download, live submission status and deadlines. `clip_102` is excluded; the
+remaining IDs run from `clip_092` to `clip_112`.
+
+Use the current repository's `starter/pack_submission.py` to prepare a single
+prediction bundle. `QUICKSTART.md` gives the commands and `RULES.md` describes
+all-20/per-clip coverage qualification, the daily allowance and final-entry
+selection. The development evaluator's overlap-only coverage diagnostic does
+not implement the server's gap-aware ranking gate.
+
+## Ongoing validation
 
 Participants can download the full package, run their own methods and evaluate
-locally now. Online submissions, the leaderboard, final ranking/coverage rules and
-competition dates will be announced separately. The development interface and
-reference data may receive documented corrections.
+locally now. Release availability and competition dates are maintained on the
+website. The development interface and reference data may receive documented
+corrections.
 
 Watch releases, report issues in this repository, or join the
 [MaCVi community](https://macvi.org/discord) for updates.

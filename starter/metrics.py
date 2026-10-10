@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Position-only trajectory metrics for the LOOKOUT development challenge.
+"""Position-only trajectory metrics for the Maritime Visual Odometry challenge.
 
 The prediction is interpolated onto reference times within their common window,
 then aligned once using a global similarity transform (rotation, translation and

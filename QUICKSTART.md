@@ -172,7 +172,7 @@ same length, with increasing indices/times and finite Nx3 positions.
 
 ## Pack a test submission
 
-When the [challenge page](https://macvi.org/workshop/macvi27/challenges/lookout)
+When the [challenge page](https://macvi.org/workshop/macvi27/challenges/maritime-visual-odometry)
 provides the held-out participant archive, verify its checksum and extract it
 separately from development data, under this repository. Its manifest is at
 `lookout-vo-test-v0.1/release_manifest.json`. Use this repository's latest packer,

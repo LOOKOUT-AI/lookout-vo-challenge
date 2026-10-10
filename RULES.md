@@ -1,4 +1,4 @@
-# MaCVi maritime monocular VO — v0.1 development rules
+# Maritime Visual Odometry — v0.1 development rules
 
 ## Task and allowed inputs
 
@@ -88,7 +88,7 @@ The server report lists per-clip status and coverage without reference positions
 This gap-aware gate is separate from the local development evaluator's overlap
 coverage diagnostic; only the server report determines competition eligibility.
 
-Create or join a LOOKOUT team on the MaCVi Teams & paper page before submitting.
+Create or join a Maritime Visual Odometry team on the MaCVi Teams & paper page before submitting.
 The team owner uploads for the team; author metadata and OpenReview details may
 be completed later, by the published metadata deadline. The limit is one evaluated
 submission per team and uploader per UTC day (reset at 00:00 UTC). Pending jobs
@@ -105,6 +105,6 @@ for organizer verification; they are not part of the initial JSON upload.
 ## Release scope and terms
 
 The development release supports local evaluation. Check the
-[challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) for the
+[challenge page](https://macvi.org/workshop/macvi27/challenges/maritime-visual-odometry) for the
 held-out download, dates and whether online submissions are open. Consult the supplied
 `LICENSE.txt` for the approved release terms and retain upstream notices for dependencies.

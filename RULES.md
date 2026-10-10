@@ -11,7 +11,8 @@ development release.
 Train on the provided training split. External pretraining is allowed and must be
 disclosed. Use validation references for development/evaluation; do not train on the
 validation or test splits, including self-supervised training on their videos. These
-development rules do not establish final competition dates or submission rules.
+rules apply to both development and held-out evaluation. The workshop website is
+the source of truth for dates and submission availability.
 
 ## Data and predictions
 
@@ -67,12 +68,43 @@ Unexpected prediction IDs are listed in the summary and excluded from scoring.
 The summary reports expected/scored/unscored counts and mean/median drift **over scored
 clips only**. Per-clip temporal coverage and maximum prediction-time gap are recorded.
 Shortened trajectories are evaluated over their shared window, so coverage must accompany
-scores. v0.1 defines no official ranking, coverage threshold or failure penalty; these
-must be settled before a competitive leaderboard. A low drift over a small selected
-subset must not be presented as full-dataset performance.
+scores. Development scores are not leaderboard entries. A low drift over a small
+selected subset must not be presented as full-dataset performance.
+
+## Held-out competition submissions
+
+Submit predictions, not a model. Run your method on the released test videos and
+use `starter/pack_submission.py` to combine the 20 clip predictions into one JSON
+bundle (64 MiB maximum). The participant test package contains no test reference
+trajectories. The organizer server evaluates against private references.
+
+An entry is eligible only if **all 20 clips score** and **each clip has at least
+95% temporal coverage**. For this gate, a reference timestamp is covered by a
+predicted sample at that time, or by interpolation between predicted samples
+no more than **1 second** apart. Larger gaps are not supported coverage. A small
+number of endpoints cannot qualify as full coverage. Scoring still uses the
+full overlapping window; gaps do not remove difficult segments from the score.
+The server report lists per-clip status and coverage without reference positions.
+This gap-aware gate is separate from the local development evaluator's overlap
+coverage diagnostic; only the server report determines competition eligibility.
+
+Create or join a LOOKOUT team on the MaCVi Teams & paper page before submitting.
+The team owner uploads for the team; author metadata and OpenReview details may
+be completed later, by the published metadata deadline. The limit is one evaluated
+submission per team and uploader per UTC day (reset at 00:00 UTC). Pending jobs
+reserve the slot. Format failures release it; scored but incomplete/ineligible
+entries consume it. Deleting a submission does not restore the allowance.
+
+Select one eligible submission as the team's **final entry** in the dashboard.
+Only this selected entry is publicly ranked, by ascending mean drift across all
+20 clips. You can change the selection until the submission deadline. Team and
+uploader attribution are recorded at upload time and are not rewritten by later
+membership or name changes. Keep your code, model settings and inference logs
+for organizer verification; they are not part of the initial JSON upload.
 
 ## Release scope and terms
 
-This version supports local development/evaluation. The submission server, competition
-dates and final leaderboard policy will follow separately. Consult the supplied
+The development release supports local evaluation. Check the
+[challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) for the
+held-out download, dates and whether online submissions are open. Consult the supplied
 `LICENSE.txt` for the approved release terms and retain upstream notices for dependencies.

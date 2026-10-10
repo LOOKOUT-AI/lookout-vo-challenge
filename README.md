@@ -7,10 +7,11 @@ shorelines make this a challenging setting for visual odometry.
 **Full development release — 23 September 2026.** Download all 92 development clips
 (68 training, 24 validation), including RGB and thermal video, calibration, frame
 timestamps and reference trajectories. Start developing and evaluating locally now.
-Online submissions, the leaderboard and competition dates will follow.
+See the challenge page for the separate 20-clip test download, online submission
+availability and competition dates.
 
 [Challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) ·
-[Development rules](RULES.md) · [DPVO quick start](QUICKSTART.md) ·
+[Challenge rules](RULES.md) · [DPVO quick start](QUICKSTART.md) ·
 [Release progress](RELEASE_STATUS.md)
 
 ## Try the evaluator now
@@ -55,8 +56,14 @@ tar -xf lookout-vo-dev-v0.1.tar
 The package contains the complete development selection: 68 training and 24
 validation clips, split by recording boat. The manifest lists the final selection
 and camera coverage. Each anonymous sequence includes video, decoded frame
-timestamps, nominal calibration and separate local-position references. Test data
-remains withheld.
+timestamps, nominal calibration and separate local-position references. The separate
+test participant package contains no references; those remain organizer-private.
+
+For the competition, submit **one JSON prediction bundle, not a model**. The new
+`starter/pack_submission.py` validates and combines the per-clip predictions.
+Follow [the test submission steps](QUICKSTART.md#pack-a-test-submission), then
+select your eligible final entry in the MaCVi dashboard. Team registration, the
+daily allowance and coverage requirements are described in [RULES.md](RULES.md).
 
 The inference wrapper uses DPVO; [QUICKSTART.md](QUICKSTART.md) records the pinned
 upstream revision, environment and checkpoint checksum. After installing that CUDA

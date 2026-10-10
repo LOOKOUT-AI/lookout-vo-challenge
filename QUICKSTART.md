@@ -86,7 +86,7 @@ recorded baseline.
 
 ## One clip
 
-Every release contains `clip_000`; its split is recorded in the manifest.
+The development release contains `clip_000`; its split is recorded in the manifest.
 
 ```bash
 python starter/infer.py --dataset release/release_manifest.json --clips clip_000 --output runs/demo
@@ -107,7 +107,8 @@ python starter/evaluate.py --dataset release/release_manifest.json --split val -
 Evaluation writes `results.json` (one outcome per expected clip), `summary.json`
 (expected/scored/unscored counts and statistics over scored clips), and optional aligned
 trajectories. Always report coverage alongside drift. v0.1 provides local development;
-there is no official ranking or failure penalty yet.
+these local scores are not official competition entries. See `RULES.md` for the
+held-out ranking and coverage requirements.
 
 ## Diagnosing a failed inference run
 
@@ -168,3 +169,25 @@ This is a format illustration, not a scoreable trajectory. Use the actual entrie
 `timing/<clip-id>.json`: indices identify decoded source-video frames, and `times[i]`
 must equal that frame's released PTS within one microsecond. All arrays must have the
 same length, with increasing indices/times and finite Nx3 positions.
+
+## Pack a test submission
+
+When the [challenge page](https://macvi.org/workshop/macvi27/challenges/lookout)
+provides the held-out participant archive, extract it separately from development
+data. In this example its manifest is at `test_release/release_manifest.json`;
+replace that path with your actual extraction directory.
+
+```bash
+python starter/infer.py --dataset test_release/release_manifest.json --split test --target-fps 8 --seed 0 --output runs/test
+python starter/pack_submission.py --dataset test_release/release_manifest.json --split test --predictions runs/test --output submission.json
+```
+
+The packer requires a prediction file for every test clip, validates its format
+against the released timestamps, strips unrelated metadata and refuses to overwrite
+an existing output. It reads no references. Passing this check establishes format
+validity, not scoreability or the private-reference coverage gate.
+
+Upload **`submission.json`**, not a ZIP, directory, checkpoint or model. Your team
+owner submits it on MaCVi and inspects the score/coverage report. Select an eligible
+entry as the team's **final entry** to put it on the leaderboard. See `RULES.md`
+for the per-team daily allowance and minimum coverage, and the website for deadlines.

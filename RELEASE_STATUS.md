@@ -1,6 +1,11 @@
-# Development release v0.1
+# Maritime Visual Odometry: development release v0.1
 
 Published 23 September 2026.
+
+**Name update, 10 October 2026:** the challenge and dataset are now called
+Maritime Visual Odometry. The former LOOKOUT name remains in immutable v0.1
+archive paths and the repository URL for compatibility. No data, checksums,
+evaluation rules, licenses or existing submissions changed with the name.
 
 The [full development dataset](https://macvi.org/downloads/lookout/v0.1/lookout-vo-dev-v0.1.tar)
 is available without an account: **92 clips, 68 training and 24 validation**.
@@ -34,7 +39,7 @@ and the starter is MIT.
 
 The 20-clip test participant package contains videos, frame timestamps and nominal
 camera calibration, but **no reference trajectories**. See the
-[challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) for the
+[challenge page](https://macvi.org/workshop/macvi27/challenges/maritime-visual-odometry) for the
 download, live submission status and deadlines. `clip_102` is excluded; the
 remaining IDs run from `clip_092` to `clip_112`.
 

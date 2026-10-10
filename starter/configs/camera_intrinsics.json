@@ -1,6 +1,6 @@
 {
   "$comment": [
-    "Nominal, field-of-view-derived camera geometry for the LOOKOUT starter.",
+    "Nominal, field-of-view-derived camera geometry for the Maritime Visual Odometry starter.",
     "These are not measured per-camera calibrations. For released data, the public manifest supplies the per-clip active image and calibration.",
     "Thermal video may be pillarboxed; focal lengths use the active image dimensions, not the encoded container width."
   ],

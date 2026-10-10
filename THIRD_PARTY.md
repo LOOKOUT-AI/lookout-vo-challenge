@@ -1,6 +1,6 @@
 # Upstream dependencies
 
-This repository contains the LOOKOUT challenge wrapper and evaluator. It does not
+This repository contains the Maritime Visual Odometry challenge wrapper and evaluator. It does not
 bundle the DPVO implementation, its CUDA extensions, Eigen or pretrained weights.
 
 - DPVO: https://github.com/princeton-vl/DPVO, pinned revision

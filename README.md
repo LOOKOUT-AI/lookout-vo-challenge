@@ -1,4 +1,4 @@
-# LOOKOUT: Maritime Monocular Visual Odometry
+# Maritime Visual Odometry
 
 Estimate a boat-mounted camera's trajectory from RGB or thermal video, calibration
 and frame timestamps. Water reflections, waves, changing visibility and distant
@@ -10,9 +10,13 @@ timestamps and reference trajectories. Start developing and evaluating locally n
 See the challenge page for the separate 20-clip test download, online submission
 availability and competition dates.
 
-[Challenge page](https://macvi.org/workshop/macvi27/challenges/lookout) ·
+[Challenge page](https://macvi.org/workshop/macvi27/challenges/maritime-visual-odometry) ·
 [Challenge rules](RULES.md) · [DPVO quick start](QUICKSTART.md) ·
 [Release progress](RELEASE_STATUS.md)
+
+Previously named LOOKOUT Visual Odometry. This is a naming update only: the
+repository URL, v0.1 archive names, checksums, clip IDs and submission format are
+unchanged. Existing downloads and participant submissions remain valid.
 
 ## Try the evaluator now
 

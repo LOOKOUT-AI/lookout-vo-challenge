@@ -87,6 +87,22 @@ GPS, IMU, AIS, speed and heading are not inference inputs. Read [RULES.md](RULES
 for training rules and the provisional local evaluation metric. Always report
 coverage with scores.
 
+## Constant-velocity reference baseline
+
+`starter/cv_baseline.py` writes a unit-speed straight line, `[t - t0, 0, 0]`, at
+every released frame time. It reads only the manifest and frame timestamps, with no
+video, calibration or references, and needs only the CPU evaluation setup:
+
+```bash
+python starter/cv_baseline.py --dataset release/release_manifest.json --split val --output runs/cv-val
+python starter/evaluate.py --dataset release/release_manifest.json --split val --predictions runs/cv-val
+```
+
+On the 24 validation clips it scores **38.76% mean drift** (median 36.81%), with
+24/24 clips scored. It is a no-vision reference row: the evaluator's global Sim(3)
+fit removes scale and heading, so a straight line scores well on steady, near-straight
+clips and badly on turns and speed changes. Compare visual methods against it.
+
 ## Follow updates and contribute
 
 Watch this repository's releases for dataset announcements. Use
